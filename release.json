@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "cli": {
+    "version": "0.1.2",
+    "published": true
+  },
+  "skill": {
+    "version": "0.1.2",
+    "minimum_cli": "0.1.2",
+    "published": true
+  }
+}

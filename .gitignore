@@ -1,0 +1,5 @@
+/dist/
+/.local/
+/inkspect
+/inkspect.exe
+.inkspect.json
