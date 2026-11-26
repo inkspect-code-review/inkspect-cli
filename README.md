@@ -1,10 +1,8 @@
 # Inkspect CLI
 
-A native Cloud client for source context and code reviews. No engine, indexer or
-language runtime is installed on the user's machine.
-
-**Release:** v0.1.2. Native downloads and installation commands are available on
-the official Inkspect website.
+A native terminal client for Inkspect Cloud. Search indexed repositories for
+cited source, expand a result at its recorded revision, or submit a code review.
+[Native downloads for macOS, Linux and Windows](https://inkspect.si/cli)
 
 ## Install
 
@@ -29,46 +27,43 @@ powershell -NoProfile -Command "irm https://inkspect.si/cli/install.ps1 | iex"
 Installers verify SHA-256 and install into a user directory. macOS/Linux users
 may need to add `~/.local/bin` to PATH. Windows adds `%LOCALAPPDATA%\Inkspect\bin`
 to the user PATH; reopen the terminal. x64 and ARM64 builds are provided for each
-OS. Users do not need Go. Developers need Go 1.25.5+ to build this source.
+OS.
 
-## Connect and ask
+## Get source context
 
-Run `inkspect login` to open Cloud in your browser, choose a workspace and approve
-the matching terminal code. Use `inkspect login --no-browser` on a remote machine.
-For automation, create an **Inkspect CLI** key in Cloud → API keys and use
-`INKSPECT_API_KEY` or `inkspect login --token-stdin`. Never put keys in arguments
-or project files. Workspace owner/admin access is required.
+Sign in as a workspace owner or admin. Compare the terminal code with the one
+in the browser, then approve the workspace. Over SSH, use `inkspect login --no-browser`.
+For automation, supply a CLI-purpose key via `INKSPECT_API_KEY` or `login --token-stdin`.
 
 ```sh
 inkspect login
 inkspect whoami
-inkspect ask
-inkspect ask "Payment provider extension points and tests" --format json --explain
-inkspect index
-inkspect index status
-inkspect source <source-id> --around 40
-inkspect skill install --agent codex
-inkspect mcp serve
-inkspect skill updates
-inkspect skill update
-inkspect update
+inkspect ask "Where are review findings validated?" --format json
 ```
 
-`ask` detects the local repository or searches accessible repositories in your
-current Cloud workspace. No `init` is required. Use `--repo owner/name` to narrow
-the search, `--all` for workspace search, or `init` to save an automatic mapping.
+From a connected checkout, `ask` detects the repository automatically. Use
+`--repo owner/name` to choose one explicitly or `--all` to search across the
+workspace. Pass a returned source ID to `inkspect source <source-id> --around 40`
+to read the surrounding lines at the same revision.
 
-See [Usage](docs/USAGE.md), [Architecture](docs/ARCHITECTURE.md),
-[release checklist](docs/RELEASE.md) and the [tracked PRD](docs/PRD.md).
+To inspect the changes a local review would send, run `inkspect review local --dry-run`.
+Submitting the review uploads the selected source to Cloud and consumes workspace credits.
+The [command guide](docs/USAGE.md) covers reviews, indexing, MCP and agent skills.
 
 ## Develop
+
+When handling `ask`, the [command dispatcher](internal/cli/run.go) resolves the
+workspace and repository through [scope.go](internal/cli/scope.go), then sends
+the question to `/api/cli/context` through the [HTTP client](internal/cli/client.go).
+Local reviews collect their before/after files in [snapshot.go](internal/cli/snapshot.go).
+
+CI uses Go 1.25.5. Run its checks from the repository root.
 
 ```sh
 go test -race ./...
 go vet ./...
 go build -buildvcs=false -o inkspect ./cmd/inkspect
-go run scripts/build.go
 ```
 
-The build script creates all six native archives and `dist/SHA256SUMS`. It does
-not publish or run Git. CI runs native tests on Windows, macOS and Linux.
+See [architecture](docs/ARCHITECTURE.md) for the client/Cloud boundary and the
+[release checklist](docs/RELEASE.md) for building the six native archives.
